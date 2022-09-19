@@ -15,16 +15,19 @@ import org.springframework.web.client.RestTemplate;
 public class BlogApiClient {
     private final RestTemplate restTemplate;
 
-    private final String KakaoUrl_getMovies = "https://dapi.kakao.com/v2/search/blog?query={keyword}&sort={sort}&page={page}&size={size}";
-
-    public BlogResponseDTO requestBlog(String sort, int page, int size, String keyword) {
+    public BlogResponseDTO findBlogByKakao(String sort, int page, int size, String keyword) {
+        String kakaoUrl_getMovies = "https://dapi.kakao.com/v2/search/blog?query={keyword}&sort={sort}&page={page}&size={size}";
+        
         final HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "KakaoAK 57ae58e24e2aa14b1cc93f2ffadc1ddd");
 
         final HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        log.info("url: " + KakaoUrl_getMovies);
-        return restTemplate.exchange(KakaoUrl_getMovies, HttpMethod.GET, entity, BlogResponseDTO.class, keyword, sort, page, size).getBody();
+
+        log.info("url: " + kakaoUrl_getMovies);
+        return restTemplate.exchange(kakaoUrl_getMovies, HttpMethod.GET, entity, BlogResponseDTO.class, keyword, sort,
+                                   page, size)
+                           .getBody();
     }
 
 

@@ -31,7 +31,7 @@ public class BlogApiService {
                              .increaseCount();
         }
 
-        return blogApiClient.requestBlog(sort, page, size, keyword);
+        return blogApiClient.findBlogByKakao(sort, page, size, keyword);
     }
 
     public PopularKeywordResponseDTO findPopularKeyword(Pageable pageable) {
