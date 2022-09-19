@@ -3,11 +3,12 @@ package com.api.searchblog.dto;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class BlogResponseDTO {
     private MetaItem meta;
-    private DocumentItem[] documents;
+    private List<DocumentItem> documents;
 
     @Data
     static class MetaItem {
