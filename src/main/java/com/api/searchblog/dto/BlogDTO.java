@@ -1,5 +1,6 @@
 package com.api.searchblog.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.Date;
@@ -8,6 +9,7 @@ import java.util.List;
 public class BlogDTO {
 
     @Data
+    @Builder
     public static class BlogRequestDTO {
         private String query;
         private String sort;
