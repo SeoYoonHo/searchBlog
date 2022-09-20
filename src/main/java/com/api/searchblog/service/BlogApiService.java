@@ -1,9 +1,8 @@
 package com.api.searchblog.service;
 
 import com.api.searchblog.api.BlogApiClient;
-import com.api.searchblog.config.SortStatus;
 import com.api.searchblog.domain.Keyword;
-import com.api.searchblog.dto.BlogResponseDTO;
+import com.api.searchblog.dto.BlogDTO;
 import com.api.searchblog.dto.PopularKeywordResponseDTO;
 import com.api.searchblog.dto.ResponseDTO;
 import com.api.searchblog.repository.KeywordRepository;
@@ -17,35 +16,31 @@ import org.springframework.web.client.RestClientException;
 @SuppressWarnings("rawtypes")
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BlogApiService {
     private final BlogApiClient blogApiClient;
 
     private final KeywordRepository keywordRepository;
 
-    @Transactional
-    public ResponseDTO findBlogMyKeyword(String query, String sort, int page, int size) {
-        Keyword kw = keywordRepository.findByKeyword(query);
+    public ResponseDTO findBlogMyKeyword(BlogDTO.BlogRequestDTO requestDTO) {
+        Keyword kw = keywordRepository.findByKeyword(requestDTO.getQuery());
         if (kw == null) {
             kw = new Keyword();
-            kw.setKeyword(query);
+            kw.setKeyword(requestDTO.getQuery());
             kw.setCount(1);
             keywordRepository.save(kw);
         } else {
-            keywordRepository.findByKeyword(query)
+            keywordRepository.findByKeyword(requestDTO.getQuery())
                              .increaseCount();
         }
 
         ResponseDTO result;
         try {
-            BlogResponseDTO.KakaoBlogResponseDTO blogResponseDTO = blogApiClient.findBlogByKakao(query, sort, page,
-                    size);
+            BlogDTO.KakaoBlogResponseDTO blogResponseDTO = blogApiClient.findBlogByKakao(requestDTO);
 
             result = ResponseDTO.of("001", "Success", blogResponseDTO);
         } catch (RestClientException e) {
-            BlogResponseDTO.NaverResponseDTO blogResponseDTO = blogApiClient.findBlogByNaver(query,
-                    SortStatus.valueOf(sort)
-                              .getNaver()
-                    , page, size);
+            BlogDTO.NaverResponseDTO blogResponseDTO = blogApiClient.findBlogByNaver(requestDTO);
 
             result = ResponseDTO.of("001", "Success", blogResponseDTO);
         }
@@ -54,9 +49,9 @@ public class BlogApiService {
         return result;
     }
 
+    @Transactional(readOnly = true)
     public PopularKeywordResponseDTO findPopularKeyword(Pageable pageable) {
         Page<Keyword> keywordList = keywordRepository.findAll(pageable);
-
 
         Page<PopularKeywordResponseDTO.Item> kwList =
                 keywordList.map(keyword -> PopularKeywordResponseDTO.Item.builder()

@@ -15,5 +15,6 @@ spring:
             
 logging: 
    level:
+      com.api: debug
       org.hibernate.SQL: debug
       org.hibernate.type: trace #쿼리 파라미터 찍어주는 설정 

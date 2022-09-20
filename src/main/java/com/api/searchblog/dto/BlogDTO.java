@@ -5,10 +5,18 @@ import lombok.Data;
 import java.util.Date;
 import java.util.List;
 
-public class BlogResponseDTO {
+public class BlogDTO {
 
     @Data
-    public static class KakaoBlogResponseDTO{
+    public static class BlogRequestDTO {
+        private String query;
+        private String sort;
+        private Integer page;
+        private Integer size;
+    }
+
+    @Data
+    public static class KakaoBlogResponseDTO {
         private MetaItem meta;
         private List<DocumentItem> documents;
 
@@ -31,7 +39,7 @@ public class BlogResponseDTO {
     }
 
     @Data
-    public static class NaverResponseDTO{
+    public static class NaverResponseDTO {
         private Date lastBuildDate;
         private int total;
         private int start;
