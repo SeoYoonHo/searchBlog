@@ -15,9 +15,9 @@ import org.springframework.web.client.RestTemplate;
 public class BlogApiClient {
     private final RestTemplate restTemplate;
 
-    public BlogResponseDTO findBlogByKakao(String sort, int page, int size, String keyword) {
-        String kakaoUrl_getMovies = "https://dapi.kakao.com/v2/search/blog?query={keyword}&sort={sort}&page={page}&size={size}";
-        
+    public BlogResponseDTO.KakaoBlogResponseDTO findBlogByKakao(String query, String sort, int page, int size) {
+        String kakaoUrl_getMovies = "https://dapi.kakao.com/v2/search/blog?query={query}&sort={sort}&page={page}&size={size}";
+
         final HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "KakaoAK 57ae58e24e2aa14b1cc93f2ffadc1ddd");
 
@@ -25,8 +25,27 @@ public class BlogApiClient {
 
 
         log.info("url: " + kakaoUrl_getMovies);
-        return restTemplate.exchange(kakaoUrl_getMovies, HttpMethod.GET, entity, BlogResponseDTO.class, keyword, sort,
+        return restTemplate.exchange(kakaoUrl_getMovies, HttpMethod.GET, entity,
+                                   BlogResponseDTO.KakaoBlogResponseDTO.class, query, sort,
                                    page, size)
+                           .getBody();
+    }
+
+    public BlogResponseDTO.NaverResponseDTO findBlogByNaver(String query, String sort, int page, int size) {
+        String kakaoUrl_getMovies = "https://openapi.naver.com/v1/search/blog" +
+                ".json?query={query}&display={display}&start={start}&sort={sort}";
+
+        final HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Naver-Client-Id", "ITTmJylOV7iT4EAQgfY7");
+        headers.set("X-Naver-Client-Secret", "U9bnHNKyT8");
+
+        final HttpEntity<String> entity = new HttpEntity<>(headers);
+
+
+        log.info("url: " + kakaoUrl_getMovies);
+        return restTemplate.exchange(kakaoUrl_getMovies, HttpMethod.GET, entity, BlogResponseDTO.NaverResponseDTO.class,
+                                   query, size,
+                                   page, sort)
                            .getBody();
     }
 
