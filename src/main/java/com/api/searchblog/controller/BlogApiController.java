@@ -4,7 +4,6 @@ import com.api.searchblog.dto.BlogDTO;
 import com.api.searchblog.dto.PopularKeywordResponseDTO;
 import com.api.searchblog.dto.ResponseDTO;
 import com.api.searchblog.service.BlogApiService;
-import com.api.searchblog.serviceImpl.KakaoBlogApiServiceImpl;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -14,11 +13,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RestController;
 
-@SuppressWarnings("ALL")
+import javax.validation.Valid;
+
 @RestController
 @RequiredArgsConstructor
 public class BlogApiController {
@@ -31,10 +30,10 @@ public class BlogApiController {
             @ApiResponse(code = 200, message = "API 정상 작동"),
             @ApiResponse(code = 500, message = "서버 에러")
     })
-    @PostMapping("api/v1/search/blog")
-    public ResponseDTO getBlog(@RequestBody BlogDTO.BlogRequestDTO requestDTO) {
-
-        return blogApiServiceImpl.findBlogMyKeyword(requestDTO);
+    @GetMapping("api/v1/search/blog")
+    public ResponseDTO<BlogDTO.BlogResponseDTO> getBlog(@Valid @ModelAttribute BlogDTO.BlogRequestDTO requestDTO) {
+        BlogDTO.BlogResponseDTO blogResponseDTO = blogApiServiceImpl.findBlogMyKeyword(requestDTO);
+        return ResponseDTO.of("001", "Success", blogResponseDTO);
     }
 
     @ApiOperation(value = "상위 키워드 검색", notes = "상위 키워드 검색")

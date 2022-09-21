@@ -4,7 +4,6 @@ import com.api.searchblog.api.BlogApiClient;
 import com.api.searchblog.domain.Keyword;
 import com.api.searchblog.dto.BlogDTO;
 import com.api.searchblog.dto.PopularKeywordResponseDTO;
-import com.api.searchblog.dto.ResponseDTO;
 import com.api.searchblog.repository.KeywordRepository;
 import com.api.searchblog.service.BlogApiService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +12,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
+
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("rawtypes")
 @Service(value = "kakaoBlogApiServiceImpl")
@@ -24,7 +27,7 @@ public class KakaoBlogApiServiceImpl implements BlogApiService {
     private final KeywordRepository keywordRepository;
 
     @Override
-    public ResponseDTO findBlogMyKeyword(BlogDTO.BlogRequestDTO requestDTO) {
+    public BlogDTO.BlogResponseDTO findBlogMyKeyword(BlogDTO.BlogRequestDTO requestDTO) {
         Keyword kw = keywordRepository.findByKeyword(requestDTO.getQuery());
         if (kw == null) {
             kw = new Keyword();
@@ -36,15 +39,50 @@ public class KakaoBlogApiServiceImpl implements BlogApiService {
                              .increaseCount();
         }
 
-        ResponseDTO result;
+        BlogDTO.BlogResponseDTO result;
+
         try {
-            BlogDTO.KakaoBlogResponseDTO blogResponseDTO = blogApiClient.findBlogByKakao(requestDTO);
+            BlogDTO.KakaoBlogResponseDTO kakaoBlogResponseDTO = blogApiClient.findBlogByKakao(requestDTO);
+            BlogDTO.BlogResponseDTO blogResponseDTO = new BlogDTO.BlogResponseDTO();
+            blogResponseDTO.setTotal(kakaoBlogResponseDTO.getMeta().getPageable_count());
+            blogResponseDTO.setSize(requestDTO.getSize());
+            blogResponseDTO.setPage(requestDTO.getPage());
+            SimpleDateFormat fm = new SimpleDateFormat("yyyyMMdd");
+            List<BlogDTO.BlogResponseDTO.BlogItem> itemList = kakaoBlogResponseDTO.getDocuments().stream()
+                                                                                  .map(documentItem -> BlogDTO.BlogResponseDTO.BlogItem.builder()
+                                                                                                                                       .title(documentItem.getTitle())
+                                                                                                                                       .contents(documentItem.getContents())
+                                                                                                                                       .url(documentItem.getUrl())
+                                                                                                                                       .blogname(documentItem.getBlogname())
+                                                                                                                                       .thumbnail(documentItem.getThumbnail())
+                                                                                                                                       .postdate(fm.format(documentItem.getDatetime()))
+                                                                                                                                       .bloggerlink("")
+                                                                                                                                       .build())
+                                                                                  .collect(Collectors.toList());
+            blogResponseDTO.setItems(itemList);
 
-            result = ResponseDTO.of("001", "Success", blogResponseDTO);
+            result = blogResponseDTO;
         } catch (RestClientException e) {
-            BlogDTO.NaverResponseDTO blogResponseDTO = blogApiClient.findBlogByNaver(requestDTO);
+            BlogDTO.NaverResponseDTO naverBlogResponseDTO = blogApiClient.findBlogByNaver(requestDTO);
 
-            result = ResponseDTO.of("001", "Success", blogResponseDTO);
+            BlogDTO.BlogResponseDTO blogResponseDTO = new BlogDTO.BlogResponseDTO();
+            blogResponseDTO.setTotal(naverBlogResponseDTO.getTotal());
+            blogResponseDTO.setSize(naverBlogResponseDTO.getDisplay());
+            blogResponseDTO.setPage(naverBlogResponseDTO.getStart());
+            List<BlogDTO.BlogResponseDTO.BlogItem> itemList = naverBlogResponseDTO.getItems().stream()
+                                                                                  .map(item -> BlogDTO.BlogResponseDTO.BlogItem.builder()
+                                                                                                                               .title(item.getTitle())
+                                                                                                                               .contents(item.getDescription())
+                                                                                                                               .url(item.getLink())
+                                                                                                                               .blogname(item.getBloggername())
+                                                                                                                               .thumbnail("")
+                                                                                                                               .postdate(item.getPostdate())
+                                                                                                                               .bloggerlink(item.getBloggerlink())
+                                                                                                                               .build())
+                                                                                  .collect(Collectors.toList());
+            blogResponseDTO.setItems(itemList);
+
+            result = blogResponseDTO;
         }
 
 

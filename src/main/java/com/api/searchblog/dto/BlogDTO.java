@@ -1,8 +1,12 @@
 package com.api.searchblog.dto;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.lang.Nullable;
+import springfox.documentation.annotations.ApiIgnore;
 
+import javax.validation.constraints.NotEmpty;
 import java.util.Date;
 import java.util.List;
 
@@ -11,32 +15,59 @@ public class BlogDTO {
     @Data
     @NoArgsConstructor
     public static class BlogRequestDTO {
+        @NotEmpty(message = "키워드를 입력해주세요")
         private String query;
-        private String sort;
-        private Integer page;
-        private Integer size;
+        @Nullable
+        private String sort = "accuracy";
+        @Nullable
+        private Integer page = 1;
+        @Nullable
+        private Integer size = 10;
     }
 
     @Data
+    public static class BlogResponseDTO {
+        private int total;
+        private int page;
+        private int size;
+        private List<BlogItem> items;
+
+        @Data
+        @Builder
+        public static class BlogItem{
+            private String title;
+            private String contents;
+            private String url;
+            private String blogname;
+            private String thumbnail;
+            private String postdate;
+            private String bloggerlink;
+        }
+    }
+
+
+    @Data
+    @ApiIgnore
     public static class KakaoBlogResponseDTO {
         private MetaItem meta;
         private List<DocumentItem> documents;
 
         @Data
-        static class MetaItem {
-            public int total_count;
-            public int pageable_count;
-            public boolean is_end;
+        @ApiIgnore
+        public static class MetaItem {
+            private int total_count;
+            private int pageable_count;
+            private boolean is_end;
         }
 
         @Data
-        static class DocumentItem {
-            public String title;
-            public String contents;
-            public String url;
-            public String blogname;
-            public String thumbnail;
-            public Date datetime;
+        public static class DocumentItem {
+            private String title;
+            private String contents;
+            private String url;
+            private String blogname;
+            private String thumbnail;
+            private Date datetime;
         }
     }
 
@@ -49,13 +80,13 @@ public class BlogDTO {
         private List<DocumentItem> items;
 
         @Data
-        static class DocumentItem {
-            public String title;
-            public String link;
-            public String description;
-            public String bloggername;
-            public String bloggerlink;
-            public String postdate;
+        public static class DocumentItem {
+            private String title;
+            private String link;
+            private String description;
+            private String bloggername;
+            private String bloggerlink;
+            private String postdate;
         }
     }
 
