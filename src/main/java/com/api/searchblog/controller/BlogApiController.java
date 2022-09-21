@@ -4,10 +4,12 @@ import com.api.searchblog.dto.BlogDTO;
 import com.api.searchblog.dto.PopularKeywordResponseDTO;
 import com.api.searchblog.dto.ResponseDTO;
 import com.api.searchblog.service.BlogApiService;
+import com.api.searchblog.serviceImpl.KakaoBlogApiServiceImpl;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -21,7 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class BlogApiController {
 
-    private final BlogApiService blogApiService;
+    @Qualifier("kakaoBlogApiServiceImpl")
+    private final BlogApiService blogApiServiceImpl;
 
     @ApiOperation(value = "블로그 검색", notes = "open api를 활용한 블로그 검색")
     @ApiResponses({
@@ -31,7 +34,7 @@ public class BlogApiController {
     @PostMapping("api/v1/search/blog")
     public ResponseDTO getBlog(@RequestBody BlogDTO.BlogRequestDTO requestDTO) {
 
-        return blogApiService.findBlogMyKeyword(requestDTO);
+        return blogApiServiceImpl.findBlogMyKeyword(requestDTO);
     }
 
     @ApiOperation(value = "상위 키워드 검색", notes = "상위 키워드 검색")
@@ -47,7 +50,7 @@ public class BlogApiController {
                                                       .and(Sort.by("keyword")
                                                                .ascending()));
 
-        PopularKeywordResponseDTO result = blogApiService.findPopularKeyword(pageable);
+        PopularKeywordResponseDTO result = blogApiServiceImpl.findPopularKeyword(pageable);
 
         return ResponseDTO.of("001", "Success", result);
     }

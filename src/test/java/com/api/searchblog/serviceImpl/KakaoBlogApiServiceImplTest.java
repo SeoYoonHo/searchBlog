@@ -1,4 +1,4 @@
-package com.api.searchblog.service;
+package com.api.searchblog.serviceImpl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -24,10 +24,10 @@ import org.springframework.web.client.RestTemplate;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
-public class BlogApiServiceTest {
+public class KakaoBlogApiServiceImplTest {
 
     @Autowired
-    BlogApiService blogApiService;
+    KakaoBlogApiServiceImpl kakaoBlogApiServiceImpl;
     @Autowired
     KeywordRepository keywordRepository;
     @Autowired
@@ -37,20 +37,18 @@ public class BlogApiServiceTest {
     public void 조회카운트증가() {
         //given
         String keyword = "테스트";
-        BlogDTO.BlogRequestDTO requestDTO =
-                BlogDTO.BlogRequestDTO.builder()
-                                      .query(keyword)
-                                      .size(10)
-                                      .sort("accuracy")
-                                      .page(1)
-                                      .build();
+        BlogDTO.BlogRequestDTO requestDTO = new BlogDTO.BlogRequestDTO();
+        requestDTO.setQuery(keyword);
+        requestDTO.setSize(10);
+        requestDTO.setSort("accuracy");
+        requestDTO.setSize(1);
 
         int prevCnt = keywordRepository.findByKeyword(keyword) == null ? 0 :
                 keywordRepository.findByKeyword(keyword)
                                  .getCount();
 
         //when
-        blogApiService.findBlogMyKeyword(requestDTO);
+        kakaoBlogApiServiceImpl.findBlogMyKeyword(requestDTO);
 
         //then
         assertEquals("카운트 증가", prevCnt + 1, keywordRepository.findByKeyword(keyword)
@@ -60,13 +58,11 @@ public class BlogApiServiceTest {
     @Test
     public void 카카오실패시네이버호출() {
         //given
-        BlogDTO.BlogRequestDTO requestDTO =
-                BlogDTO.BlogRequestDTO.builder()
-                                      .query("테스트")
-                                      .size(10)
-                                      .sort("accuracy")
-                                      .page(1)
-                                      .build();
+        BlogDTO.BlogRequestDTO requestDTO = new BlogDTO.BlogRequestDTO();
+        requestDTO.setQuery("테스트");
+        requestDTO.setSize(10);
+        requestDTO.setSort("accuracy");
+        requestDTO.setSize(1);
 
         BlogApiClient blogApiClient = new BlogApiClient(restTemplate);
 
@@ -100,19 +96,17 @@ public class BlogApiServiceTest {
 
         for (int i = 0; i < 20; i++) {
             String keyword = "테스트" + i;
-            BlogDTO.BlogRequestDTO requestDTO =
-                    BlogDTO.BlogRequestDTO.builder()
-                                          .query(keyword)
-                                          .size(10)
-                                          .sort("accuracy")
-                                          .page(1)
-                                          .build();
+            BlogDTO.BlogRequestDTO requestDTO = new BlogDTO.BlogRequestDTO();
+            requestDTO.setQuery(keyword);
+            requestDTO.setSize(10);
+            requestDTO.setSort("accuracy");
+            requestDTO.setSize(1);
 
-            blogApiService.findBlogMyKeyword(requestDTO);
+            kakaoBlogApiServiceImpl.findBlogMyKeyword(requestDTO);
         }
 
         //when
-        PopularKeywordResponseDTO responseDTO = blogApiService.findPopularKeyword(pageable);
+        PopularKeywordResponseDTO responseDTO = kakaoBlogApiServiceImpl.findPopularKeyword(pageable);
 
         //then
         assertTrue(responseDTO.getKeywords().size() > 9);
