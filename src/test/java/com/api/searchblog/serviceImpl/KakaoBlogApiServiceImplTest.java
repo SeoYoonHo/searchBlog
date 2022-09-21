@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.api.searchblog.api.BlogApiClient;
+import com.api.searchblog.domain.Keyword;
 import com.api.searchblog.dto.BlogDTO;
 import com.api.searchblog.dto.PopularKeywordResponseDTO;
 import com.api.searchblog.dto.ResponseDTO;
@@ -19,6 +20,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 @RunWith(SpringRunner.class)
@@ -43,16 +48,13 @@ public class KakaoBlogApiServiceImplTest {
         requestDTO.setSort("accuracy");
         requestDTO.setSize(1);
 
-        int prevCnt = keywordRepository.findByKeyword(keyword) == null ? 0 :
-                keywordRepository.findByKeyword(keyword)
-                                 .getCount();
+        int prevCnt = keywordRepository.findByKeywordForUdate(keyword).orElse(new Keyword()).getCount();
 
         //when
         kakaoBlogApiServiceImpl.findBlogMyKeyword(requestDTO);
 
         //then
-        assertEquals("카운트 증가", prevCnt + 1, keywordRepository.findByKeyword(keyword)
-                                                             .getCount());
+        assertEquals("카운트 증가", prevCnt + 1, keywordRepository.findByKeywordForUdate(keyword).orElse(new Keyword()).getCount());
     }
 
     @Test
@@ -85,7 +87,6 @@ public class KakaoBlogApiServiceImplTest {
         assertTrue(result.getData() instanceof BlogDTO.NaverResponseDTO);
     }
 
-
     @Test
     public void 인기검색어조회() {
         //given
@@ -110,5 +111,43 @@ public class KakaoBlogApiServiceImplTest {
 
         //then
         assertTrue(responseDTO.getKeywords().size() > 9);
+    }
+
+    @Test
+    public void 동시성테스트() throws InterruptedException {
+        //given
+        ExecutorService service = Executors.newFixedThreadPool(10);
+
+        String keyword = "테스트";
+        BlogDTO.BlogRequestDTO requestDTO = new BlogDTO.BlogRequestDTO();
+        requestDTO.setQuery(keyword);
+        requestDTO.setSize(10);
+        requestDTO.setSort("accuracy");
+        requestDTO.setSize(1);
+
+        Keyword kw = keywordRepository.findByKeywordForUdate(keyword).orElse(new Keyword());
+        int prevCnt = kw.getCount();
+
+        //when
+        kakaoBlogApiServiceImpl.findBlogMyKeyword(requestDTO);
+
+        CountDownLatch latch = new CountDownLatch(10);
+        for (int i = 0; i < 10; i++) {
+            service.execute(() -> {
+                try {
+                    kakaoBlogApiServiceImpl.findBlogMyKeyword(requestDTO);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+
+        //then
+//        int result = keywordRepository.findByKeywordForUdate(keyword).orElse(new Keyword()).getCount();
+        assertEquals("카운트 증가", prevCnt + 11, kw.getCount());
     }
 }

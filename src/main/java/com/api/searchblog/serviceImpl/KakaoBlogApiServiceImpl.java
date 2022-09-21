@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 
+import java.security.Key;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,16 +29,12 @@ public class KakaoBlogApiServiceImpl implements BlogApiService {
 
     @Override
     public BlogDTO.BlogResponseDTO findBlogMyKeyword(BlogDTO.BlogRequestDTO requestDTO) {
-        Keyword kw = keywordRepository.findByKeyword(requestDTO.getQuery());
-        if (kw == null) {
-            kw = new Keyword();
-            kw.setKeyword(requestDTO.getQuery());
-            kw.setCount(1);
-            keywordRepository.save(kw);
-        } else {
-            keywordRepository.findByKeyword(requestDTO.getQuery())
-                             .increaseCount();
-        }
+        Keyword kw = keywordRepository.findByKeywordForUdate(requestDTO.getQuery()).orElseGet(() -> {
+            Keyword k = new Keyword();
+            k.setKeyword(requestDTO.getQuery());
+            k.setCount(0);
+            return k;
+        });
 
         BlogDTO.BlogResponseDTO result;
 
@@ -85,6 +82,8 @@ public class KakaoBlogApiServiceImpl implements BlogApiService {
             result = blogResponseDTO;
         }
 
+
+        kw.increaseCount();
 
         return result;
     }

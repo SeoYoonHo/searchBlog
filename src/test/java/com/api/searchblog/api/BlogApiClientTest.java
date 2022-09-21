@@ -19,13 +19,11 @@ public class BlogApiClientTest {
     @Test
     public void 카카오조회() {
         //given
-        BlogDTO.BlogRequestDTO requestDTO =
-                BlogDTO.BlogRequestDTO.builder()
-                                      .query("테스트")
-                                      .size(10)
-                                      .sort("accuracy")
-                                      .page(1)
-                                      .build();
+        BlogDTO.BlogRequestDTO requestDTO = new BlogDTO.BlogRequestDTO();
+        requestDTO.setQuery("테스트");
+        requestDTO.setSize(10);
+        requestDTO.setSort("accuracy");
+        requestDTO.setSize(1);
 
         BlogApiClient blogApiClient = new BlogApiClient(restTemplate);
 
@@ -39,13 +37,11 @@ public class BlogApiClientTest {
     @Test
     public void 네이버조회() {
         //given
-        BlogDTO.BlogRequestDTO requestDTO =
-                BlogDTO.BlogRequestDTO.builder()
-                                      .query("테스트")
-                                      .size(10)
-                                      .sort("accuracy")
-                                      .page(1)
-                                      .build();
+        BlogDTO.BlogRequestDTO requestDTO = new BlogDTO.BlogRequestDTO();
+        requestDTO.setQuery("테스트");
+        requestDTO.setSize(10);
+        requestDTO.setSort("accuracy");
+        requestDTO.setSize(1);
 
         BlogApiClient blogApiClient = new BlogApiClient(restTemplate);
 
