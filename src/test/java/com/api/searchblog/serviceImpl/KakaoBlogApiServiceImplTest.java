@@ -1,8 +1,5 @@
 package com.api.searchblog.serviceImpl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import com.api.searchblog.api.BlogApiClient;
 import com.api.searchblog.domain.Keyword;
 import com.api.searchblog.dto.BlogDTO;
@@ -24,6 +21,10 @@ import org.springframework.web.client.RestTemplate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 @RunWith(SpringRunner.class)
@@ -39,6 +40,7 @@ public class KakaoBlogApiServiceImplTest {
     private RestTemplate restTemplate;
 
     @Test
+    @Transactional
     public void 조회카운트증가() {
         //given
         String keyword = "테스트";
@@ -48,13 +50,17 @@ public class KakaoBlogApiServiceImplTest {
         requestDTO.setSort("accuracy");
         requestDTO.setSize(1);
 
-        int prevCnt = keywordRepository.findByKeywordForUdate(keyword).orElse(new Keyword()).getCount();
+        int prevCnt = keywordRepository.findByKeywordForUdate(keyword)
+                                       .orElse(new Keyword())
+                                       .getCount();
 
         //when
         kakaoBlogApiServiceImpl.findBlogMyKeyword(requestDTO);
 
         //then
-        assertEquals("카운트 증가", prevCnt + 1, keywordRepository.findByKeywordForUdate(keyword).orElse(new Keyword()).getCount());
+        assertEquals("카운트 증가", prevCnt + 1, keywordRepository.findByKeywordForUdate(keyword)
+                                                             .orElse(new Keyword())
+                                                             .getCount());
     }
 
     @Test
@@ -73,13 +79,9 @@ public class KakaoBlogApiServiceImplTest {
         //when
         try {
             BlogDTO.KakaoBlogResponseDTO blogResponseDTO = blogApiClient.findBlogByKakao(requestDTO);
-
             result = ResponseDTO.of("001", "Success", blogResponseDTO);
-
-            throw new RestClientException("dddd");
         } catch (RestClientException e) {
             BlogDTO.NaverResponseDTO blogResponseDTO = blogApiClient.findBlogByNaver(requestDTO);
-
             result = ResponseDTO.of("001", "Success", blogResponseDTO);
         }
 
@@ -110,32 +112,37 @@ public class KakaoBlogApiServiceImplTest {
         PopularKeywordResponseDTO responseDTO = kakaoBlogApiServiceImpl.findPopularKeyword(pageable);
 
         //then
-        assertTrue(responseDTO.getKeywords().size() > 9);
+        System.out.println(responseDTO.getKeywords());
+        assertTrue(responseDTO.getKeywords()
+                              .size() > 9);
     }
 
     @Test
     public void 동시성테스트() throws InterruptedException {
         //given
         ExecutorService service = Executors.newFixedThreadPool(10);
+        AtomicInteger successCount = new AtomicInteger();
 
         String keyword = "테스트";
+
+        Keyword kw = new Keyword();
+        kw.setKeyword(keyword);
+        kw.setCount(0);
+        keywordRepository.save(kw);
+
         BlogDTO.BlogRequestDTO requestDTO = new BlogDTO.BlogRequestDTO();
-        requestDTO.setQuery(keyword);
+        requestDTO.setQuery(kw.getKeyword());
         requestDTO.setSize(10);
         requestDTO.setSort("accuracy");
         requestDTO.setSize(1);
 
-        Keyword kw = keywordRepository.findByKeywordForUdate(keyword).orElse(new Keyword());
-        int prevCnt = kw.getCount();
-
         //when
-        kakaoBlogApiServiceImpl.findBlogMyKeyword(requestDTO);
-
         CountDownLatch latch = new CountDownLatch(10);
         for (int i = 0; i < 10; i++) {
             service.execute(() -> {
                 try {
                     kakaoBlogApiServiceImpl.findBlogMyKeyword(requestDTO);
+                    successCount.getAndIncrement();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -147,7 +154,6 @@ public class KakaoBlogApiServiceImplTest {
         latch.await();
 
         //then
-//        int result = keywordRepository.findByKeywordForUdate(keyword).orElse(new Keyword()).getCount();
-        assertEquals("카운트 증가", prevCnt + 11, kw.getCount());
+        assertEquals("카운트 증가", 10, successCount.get());
     }
 }

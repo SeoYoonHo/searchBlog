@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 
-import java.security.Key;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,31 +28,31 @@ public class KakaoBlogApiServiceImpl implements BlogApiService {
 
     @Override
     public BlogDTO.BlogResponseDTO findBlogMyKeyword(BlogDTO.BlogRequestDTO requestDTO) {
-        Keyword kw = keywordRepository.findByKeywordForUdate(requestDTO.getQuery()).orElseGet(() -> {
-            Keyword k = new Keyword();
-            k.setKeyword(requestDTO.getQuery());
-            k.setCount(0);
-            return k;
-        });
-
         BlogDTO.BlogResponseDTO result;
-
         try {
             BlogDTO.KakaoBlogResponseDTO kakaoBlogResponseDTO = blogApiClient.findBlogByKakao(requestDTO);
             BlogDTO.BlogResponseDTO blogResponseDTO = new BlogDTO.BlogResponseDTO();
-            blogResponseDTO.setTotal(kakaoBlogResponseDTO.getMeta().getPageable_count());
+            blogResponseDTO.setTotal(kakaoBlogResponseDTO.getMeta()
+                                                         .getPageable_count());
             blogResponseDTO.setSize(requestDTO.getSize());
             blogResponseDTO.setPage(requestDTO.getPage());
             SimpleDateFormat fm = new SimpleDateFormat("yyyyMMdd");
-            List<BlogDTO.BlogResponseDTO.BlogItem> itemList = kakaoBlogResponseDTO.getDocuments().stream()
+            List<BlogDTO.BlogResponseDTO.BlogItem> itemList = kakaoBlogResponseDTO.getDocuments()
+                                                                                  .stream()
                                                                                   .map(documentItem -> BlogDTO.BlogResponseDTO.BlogItem.builder()
                                                                                                                                        .title(documentItem.getTitle())
-                                                                                                                                       .contents(documentItem.getContents())
+                                                                                                                                       .contents(
+                                                                                                                                               documentItem.getContents())
                                                                                                                                        .url(documentItem.getUrl())
-                                                                                                                                       .blogname(documentItem.getBlogname())
-                                                                                                                                       .thumbnail(documentItem.getThumbnail())
-                                                                                                                                       .postdate(fm.format(documentItem.getDatetime()))
-                                                                                                                                       .bloggerlink("")
+                                                                                                                                       .blogname(
+                                                                                                                                               documentItem.getBlogname())
+                                                                                                                                       .thumbnail(
+                                                                                                                                               documentItem.getThumbnail())
+                                                                                                                                       .postdate(
+                                                                                                                                               fm.format(
+                                                                                                                                                       documentItem.getDatetime()))
+                                                                                                                                       .bloggerlink(
+                                                                                                                                               "")
                                                                                                                                        .build())
                                                                                   .collect(Collectors.toList());
             blogResponseDTO.setItems(itemList);
@@ -66,15 +65,21 @@ public class KakaoBlogApiServiceImpl implements BlogApiService {
             blogResponseDTO.setTotal(naverBlogResponseDTO.getTotal());
             blogResponseDTO.setSize(naverBlogResponseDTO.getDisplay());
             blogResponseDTO.setPage(naverBlogResponseDTO.getStart());
-            List<BlogDTO.BlogResponseDTO.BlogItem> itemList = naverBlogResponseDTO.getItems().stream()
+            List<BlogDTO.BlogResponseDTO.BlogItem> itemList = naverBlogResponseDTO.getItems()
+                                                                                  .stream()
                                                                                   .map(item -> BlogDTO.BlogResponseDTO.BlogItem.builder()
                                                                                                                                .title(item.getTitle())
-                                                                                                                               .contents(item.getDescription())
+                                                                                                                               .contents(
+                                                                                                                                       item.getDescription())
                                                                                                                                .url(item.getLink())
-                                                                                                                               .blogname(item.getBloggername())
-                                                                                                                               .thumbnail("")
-                                                                                                                               .postdate(item.getPostdate())
-                                                                                                                               .bloggerlink(item.getBloggerlink())
+                                                                                                                               .blogname(
+                                                                                                                                       item.getBloggername())
+                                                                                                                               .thumbnail(
+                                                                                                                                       "")
+                                                                                                                               .postdate(
+                                                                                                                                       item.getPostdate())
+                                                                                                                               .bloggerlink(
+                                                                                                                                       item.getBloggerlink())
                                                                                                                                .build())
                                                                                   .collect(Collectors.toList());
             blogResponseDTO.setItems(itemList);
@@ -82,8 +87,15 @@ public class KakaoBlogApiServiceImpl implements BlogApiService {
             result = blogResponseDTO;
         }
 
-
+        Keyword kw = keywordRepository.findByKeywordForUdate(requestDTO.getQuery())
+                                      .orElseGet(() -> {
+                                          Keyword k = new Keyword();
+                                          k.setKeyword(requestDTO.getQuery());
+                                          k.setCount(0);
+                                          return k;
+                                      });
         kw.increaseCount();
+        keywordRepository.save(kw);
 
         return result;
     }

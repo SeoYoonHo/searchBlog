@@ -13,9 +13,7 @@ import java.util.Optional;
 
 public interface KeywordRepository extends JpaRepository<Keyword, Long> {
 
-//    Optional<Keyword> findByKeyword(String keyword);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Lock(LockModeType.PESSIMISTIC_READ)
     @Query("select k from Keyword k where k.keyword = :keyword")
     Optional<Keyword> findByKeywordForUdate(@Param("keyword") String keyword);
 
