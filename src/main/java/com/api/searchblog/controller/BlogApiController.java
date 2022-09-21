@@ -4,9 +4,7 @@ import com.api.searchblog.dto.BlogDTO;
 import com.api.searchblog.dto.PopularKeywordResponseDTO;
 import com.api.searchblog.dto.ResponseDTO;
 import com.api.searchblog.service.BlogApiService;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +24,12 @@ public class BlogApiController {
     private final BlogApiService blogApiServiceImpl;
 
     @ApiOperation(value = "블로그 검색", notes = "open api를 활용한 블로그 검색")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "query", value = "검색 키워드", example = "테스트", required = true),
+            @ApiImplicitParam(name = "sort", value = "정렬 방식(accuracy, recency)", example = "accuracy"),
+            @ApiImplicitParam(name = "page", value = "페이지", example = "1"),
+            @ApiImplicitParam(name = "size", value = "페이지 크기", example = "10")
+    })
     @ApiResponses({
             @ApiResponse(code = 200, message = "API 정상 작동"),
             @ApiResponse(code = 500, message = "서버 에러")
