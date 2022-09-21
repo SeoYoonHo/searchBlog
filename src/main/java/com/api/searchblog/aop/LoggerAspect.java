@@ -21,23 +21,23 @@ public class LoggerAspect {
     @Before("cut()")
     public void beforeParameterLog(JoinPoint joinPoint) {
         Method method = getMethod(joinPoint);
-        log.info("======= method name = {} =======", method.getName());
+        log.debug("======= method name = {} =======", method.getName());
 
         Object[] args = joinPoint.getArgs();
         if (args.length <= 0) log.info("no parameter");
         for (Object arg : args) {
-            log.info("parameter type = {}", arg.getClass().getSimpleName());
-            log.info("parameter value = {}", arg);
+            log.debug("parameter type = {}", arg.getClass().getSimpleName());
+            log.debug("parameter value = {}", arg);
         }
     }
 
     @AfterReturning(value = "cut()", returning = "returnObj")
     public void afterReturnLog(JoinPoint joinPoint, Object returnObj) {
         Method method = getMethod(joinPoint);
-        log.info("======= method name = {} =======", method.getName());
+        log.debug("======= method name = {} =======", method.getName());
 
-        log.info("return type = {}", returnObj.getClass().getSimpleName());
-        log.info("return value = {}", returnObj);
+        log.debug("return type = {}", returnObj.getClass().getSimpleName());
+        log.debug("return value = {}", returnObj);
     }
 
     private Method getMethod(JoinPoint joinPoint) {
